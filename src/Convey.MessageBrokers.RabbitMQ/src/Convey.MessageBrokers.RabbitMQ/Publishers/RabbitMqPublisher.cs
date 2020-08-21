@@ -15,11 +15,11 @@ namespace Convey.MessageBrokers.RabbitMQ.Publishers
         }
 
         public Task PublishAsync<T>(T message, string messageId = null, string correlationId = null,
-            string spanContext = null, object messageContext = null, IDictionary<string, object> headers = null)
+            string spanContext = null, object messageContext = null, IDictionary<string, object> headers = null, string routingKey = null)
             where T : class
         {
             _client.Send(message, _conventionsProvider.Get(message.GetType()), messageId, correlationId, spanContext,
-                messageContext, headers);
+                messageContext, headers, routingKey);
 
             return Task.CompletedTask;
         }

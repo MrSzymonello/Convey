@@ -30,7 +30,7 @@ namespace Convey.MessageBrokers.RabbitMQ.Clients
         }
 
         public void Send(object message, IConventions conventions, string messageId = null, string correlationId = null,
-            string spanContext = null, object messageContext = null, IDictionary<string, object> headers = null)
+            string spanContext = null, object messageContext = null, IDictionary<string, object> headers = null, string routingKey = null)
         {
             var payload = _serializer.Serialize(message);
             var body = Encoding.UTF8.GetBytes(payload);
@@ -43,6 +43,7 @@ namespace Convey.MessageBrokers.RabbitMQ.Clients
                 : correlationId;
             properties.Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
             properties.Headers = new Dictionary<string, object>();
+            var rKey = routingKey ?? conventions.RoutingKey;
 
             if (_contextEnabled)
             {
@@ -69,12 +70,12 @@ namespace Convey.MessageBrokers.RabbitMQ.Clients
 
             if (_loggerEnabled)
             {
-                _logger.LogTrace($"Publishing a message with routing key: '{conventions.RoutingKey}' " +
+                _logger.LogTrace($"Publishing a message with routing key: '{rKey}' " +
                                  $"to exchange: '{conventions.Exchange}' " +
                                  $"[id: '{properties.MessageId}', correlation id: '{properties.CorrelationId}']");
             }
 
-            _channel.BasicPublish(conventions.Exchange, conventions.RoutingKey, properties, body);
+            _channel.BasicPublish(conventions.Exchange, rKey, properties, body);
         }
 
         private void IncludeMessageContext(object context, IBasicProperties properties)
